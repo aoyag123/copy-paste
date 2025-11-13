@@ -5,6 +5,27 @@
     <title>SOAP分割テスト</title>
 </head>
 <body>
+
+    <!-- 右上に固定するリロードボタン -->
+    <button id="reloadBtn" onclick="location.reload()">🗑️</button>
+
+    <style>
+        #reloadBtn {
+            position: fixed;
+            top: 10px;
+            right: 40%;
+            padding: 8px 12px;
+            font-size: 20px;
+            border: none;
+            background: #eee;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+
+        #reloadBtn:hover {
+            background: #ddd;
+        }
+    </style>
     <h1>文章分割とコピー</h1>
 
     <p>元の文章（【S】【O】【A】【EP】【OP】を含む全文）を貼り付けてください。</p>
