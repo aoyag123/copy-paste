@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>SOAP分割テスト</title>
+</head>
+<body>
+    <h1>文章分割とコピー</h1>
+
+    <p>元の文章（【S】【O】【A】【EP】【OP】を含む全文）を貼り付けてください。</p>
+    <textarea id="sourceText" rows="15" cols="80">
+
+    </textarea>
+    <br>
+    <button type="button" onclick="splitText()">5ブロックに分割する</button>
+
+    <hr>
+
+    <h2>S</h2>
+    <textarea id="sBlock" rows="5" cols="80"></textarea>
+    <br>
+    <button type="button" onclick="copyBlock('sBlock')">Sをコピー</button>
+
+    <h2>O</h2>
+    <textarea id="oBlock" rows="5" cols="80"></textarea>
+    <br>
+    <button type="button" onclick="copyBlock('oBlock')">Oをコピー</button>
+
+    <h2>A</h2>
+    <textarea id="aBlock" rows="5" cols="80"></textarea>
+    <br>
+    <button type="button" onclick="copyBlock('aBlock')">Aをコピー</button>
+
+    <h2>EP</h2>
+    <textarea id="epBlock" rows="5" cols="80"></textarea>
+    <br>
+    <button type="button" onclick="copyBlock('epBlock')">EPをコピー</button>
+
+    <h2>OP</h2>
+    <textarea id="opBlock" rows="5" cols="80"></textarea>
+    <br>
+    <button type="button" onclick="copyBlock('opBlock')">OPをコピー</button>
+
+    <script>
+        function splitText() {
+            const text = document.getElementById("sourceText").value;
+
+            // 【S】〜【OP】までを順番に抜き出す単純な例
+            const pattern = /【S】([\s\S]*?)【O】([\s\S]*?)【A】([\s\S]*?)【EP】([\s\S]*?)【OP】([\s\S]*)/;
+            const match = text.match(pattern);
+
+            if (!match) {
+                alert("【S】【O】【A】【EP】【OP】の形式で文章が見つかりません。");
+                return;
+            }
+
+            // match[1]〜match[5] にそれぞれのブロックが入る
+            document.getElementById("sBlock").value  = match[1].trim();
+            document.getElementById("oBlock").value  = match[2].trim();
+            document.getElementById("aBlock").value  = match[3].trim();
+            document.getElementById("epBlock").value = match[4].trim();
+            document.getElementById("opBlock").value = match[5].trim();
+        }
+
+        function copyBlock(id) {
+            const area = document.getElementById(id);
+            const text = area.value;
+
+            if (!text) {
+                alert("コピーする内容がありません。");
+                return;
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text)
+                    .catch(err => {
+                        alert("コピーに失敗しました。");
+                        console.error(err);
+                    });
+            } else {
+                // 古い環境向けのフォールバック
+                area.select();
+                document.execCommand("copy");
+            }
+        }
+    </script>
+</body>
+<footer><p>株式会社かなうま</p></footer>
+</html>
