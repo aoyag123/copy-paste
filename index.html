@@ -38,27 +38,27 @@
     <h2>S</h2>
     <textarea id="sBlock" rows="5" cols="80"></textarea>
     <br>
-    <button type="button" onclick="copyBlock('sBlock')">Sをコピー</button>
+    <button type="button" onclick="copyBlock('sBlock', this)">Sをコピー</button>
 
     <h2>O</h2>
     <textarea id="oBlock" rows="5" cols="80"></textarea>
     <br>
-    <button type="button" onclick="copyBlock('oBlock')">Oをコピー</button>
+    <button type="button" onclick="copyBlock('oBlock', this)">Oをコピー</button>
 
     <h2>A</h2>
     <textarea id="aBlock" rows="5" cols="80"></textarea>
     <br>
-    <button type="button" onclick="copyBlock('aBlock')">Aをコピー</button>
+    <button type="button" onclick="copyBlock('aBlock', this)">Aをコピー</button>
 
     <h2>EP</h2>
     <textarea id="epBlock" rows="5" cols="80"></textarea>
     <br>
-    <button type="button" onclick="copyBlock('epBlock')">EPをコピー</button>
+    <button type="button" onclick="copyBlock('epBlock', this)">EPをコピー</button>
 
     <h2>OP</h2>
     <textarea id="opBlock" rows="5" cols="80"></textarea>
     <br>
-    <button type="button" onclick="copyBlock('opBlock')">OPをコピー</button>
+    <button type="button" onclick="copyBlock('opBlock', this)">OPをコピー</button>
 
         <script>
         function splitText() {
@@ -79,7 +79,36 @@
             document.getElementById("epBlock").value = "【EP】\n" + match[4].trim();
             document.getElementById("opBlock").value = "【OP】\n" + match[5].trim();
         }
+
+        function copyBlock(id, btn) {
+            const area = document.getElementById(id);
+            const text = area.value;
+
+            if (!text) {
+                alert("コピーする内容がありません。");
+                return;
+            }
+
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    // ボタン色変更
+                    btn.style.backgroundColor = "#8bc34a";  // 緑
+                    btn.style.color = "white";
+
+                    // 1秒後に戻す
+                    setTimeout(() => {
+                        btn.style.backgroundColor = "";
+                        btn.style.color = "";
+                    }, 1000);
+                })
+                .catch(err => {
+                    alert("コピーに失敗しました。");
+                    console.error(err);
+                });
+        }
+
     </script>
+
 </body>
 <footer><p>株式会社かなうま</p></footer>
 </html>
