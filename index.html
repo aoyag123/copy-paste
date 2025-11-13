@@ -8,9 +8,7 @@
     <h1>文章分割とコピー</h1>
 
     <p>元の文章（【S】【O】【A】【EP】【OP】を含む全文）を貼り付けてください。</p>
-    <textarea id="sourceText" rows="15" cols="80">
-
-    </textarea>
+    <textarea id="sourceText" rows="15" cols="80"></textarea>
     <br>
     <button type="button" onclick="splitText()">5ブロックに分割する</button>
 
@@ -41,11 +39,10 @@
     <br>
     <button type="button" onclick="copyBlock('opBlock')">OPをコピー</button>
 
-    <script>
+        <script>
         function splitText() {
             const text = document.getElementById("sourceText").value;
 
-            // 【S】〜【OP】までを順番に抜き出す単純な例
             const pattern = /【S】([\s\S]*?)【O】([\s\S]*?)【A】([\s\S]*?)【EP】([\s\S]*?)【OP】([\s\S]*)/;
             const match = text.match(pattern);
 
@@ -54,34 +51,12 @@
                 return;
             }
 
-            // match[1]〜match[5] にそれぞれのブロックが入る
-            document.getElementById("sBlock").value  = match[1].trim();
-            document.getElementById("oBlock").value  = match[2].trim();
-            document.getElementById("aBlock").value  = match[3].trim();
-            document.getElementById("epBlock").value = match[4].trim();
-            document.getElementById("opBlock").value = match[5].trim();
-        }
-
-        function copyBlock(id) {
-            const area = document.getElementById(id);
-            const text = area.value;
-
-            if (!text) {
-                alert("コピーする内容がありません。");
-                return;
-            }
-
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text)
-                    .catch(err => {
-                        alert("コピーに失敗しました。");
-                        console.error(err);
-                    });
-            } else {
-                // 古い環境向けのフォールバック
-                area.select();
-                document.execCommand("copy");
-            }
+            // 見出しを残して出力
+            document.getElementById("sBlock").value  = "【S】\n"  + match[1].trim();
+            document.getElementById("oBlock").value  = "【O】\n"  + match[2].trim();
+            document.getElementById("aBlock").value  = "【A】\n"  + match[3].trim();
+            document.getElementById("epBlock").value = "【EP】\n" + match[4].trim();
+            document.getElementById("opBlock").value = "【OP】\n" + match[5].trim();
         }
     </script>
 </body>
