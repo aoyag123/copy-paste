@@ -1,69 +1,308 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
-    <title>SOAP分割テスト</title>
-</head>
-<body>
-
-    <!-- 右上に固定するリロードボタン -->
-    <button id="reloadBtn" onclick="location.reload()">🗑️</button>
-
+    <title>SOAP分割コピー</title>
     <style>
+        body {
+            font-family: sans-serif;
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        h1 {
+            font-size: 1.4em;
+            margin-bottom: 8px;
+        }
+
+        h2 {
+            font-size: 1.1em;
+            margin: 12px 0 4px;
+        }
+
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 14px;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        button {
+            padding: 7px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #e0e0e0;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #d0d0d0;
+        }
+
         #reloadBtn {
             position: fixed;
             top: 10px;
-            right: 40%;
+            right: 20px;
             padding: 8px 12px;
             font-size: 20px;
             border: none;
             background: #eee;
             cursor: pointer;
             border-radius: 6px;
+            z-index: 100;
         }
 
         #reloadBtn:hover {
             background: #ddd;
         }
+
+        #splitBtn {
+            background: #5c6bc0;
+            color: white;
+            padding: 9px 18px;
+            font-size: 15px;
+        }
+
+        #splitBtn:hover {
+            background: #3949ab;
+        }
+
+        /* ===== 自動コピーボタン ===== */
+        #autoBtn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            font-size: 19px;
+            font-weight: bold;
+            background: #1976d2;
+            color: white;
+            border-radius: 8px;
+            margin: 14px 0 10px;
+            box-shadow: 0 2px 8px rgba(25, 118, 210, 0.3);
+            letter-spacing: 0.04em;
+        }
+
+        #autoBtn:hover:not(:disabled) {
+            background: #1565c0;
+        }
+
+        #autoBtn:disabled {
+            background: #aaa;
+            cursor: default;
+            box-shadow: none;
+        }
+
+        #autoBtn.running {
+            background: #e53935;
+        }
+
+        #autoBtn.running:hover {
+            background: #c62828;
+        }
+
+        /* ===== プログレスバー ===== */
+        #progressBar {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .prog-step {
+            flex: 1;
+            text-align: center;
+            padding: 6px 0;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            background: #e0e0e0;
+            color: #888;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .prog-step.active {
+            background: #1976d2;
+            color: #fff;
+            animation: pulse 0.8s infinite alternate;
+        }
+
+        .prog-step.done {
+            background: #8bc34a;
+            color: #fff;
+        }
+
+        @keyframes pulse {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0.65;
+            }
+        }
+
+        /* ===== ステータス ===== */
+        #statusBox {
+            background: #fff;
+            border: 2px solid #1976d2;
+            border-radius: 10px;
+            padding: 10px 16px;
+            margin-bottom: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        #statusBox.visible {
+            display: block;
+        }
+
+        #statusLabel {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 2px;
+        }
+
+        #statusLabel.done-all {
+            color: #388e3c;
+        }
+
+        #countdown {
+            font-size: 28px;
+            font-weight: bold;
+            color: #e53935;
+            line-height: 1.2;
+        }
+
+        #hint {
+            font-size: 12px;
+            color: #777;
+            margin-top: 2px;
+        }
+
+        /* ===== ブロック ===== */
+        .block-section {
+            background: #fff;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+        }
+
+        .block-section.active-step {
+            border-color: #1976d2;
+            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.18);
+        }
+
+        .block-section.done-step {
+            border-color: #8bc34a;
+            background: #f9fff3;
+        }
     </style>
+</head>
+
+<body>
+
+    <button id="reloadBtn" onclick="location.reload()">🗑️</button>
+
     <h1>文章分割とコピー</h1>
-
     <p>元の文章（【S】【O】【A】【EP】【OP】を含む全文）を貼り付けてください。</p>
-    <textarea id="sourceText" rows="15" cols="80"></textarea>
-    <br>
-    <button type="button" onclick="splitText()">5ブロックに分割する</button>
 
-    <hr>
+    <textarea id="sourceText" rows="8"></textarea>
+    <br><br>
+    <button id="splitBtn" type="button" onclick="splitText()">▶ 5ブロックに分割する</button>
 
-    <h2>S</h2>
-    <textarea id="sBlock" rows="5" cols="80"></textarea>
-    <br>
-    <button type="button" onclick="copyBlock('sBlock', this)">Sをコピー</button>
+    <hr style="margin:18px 0;">
 
-    <h2>O</h2>
-    <textarea id="oBlock" rows="5" cols="80"></textarea>
-    <br>
-    <button type="button" onclick="copyBlock('oBlock', this)">Oをコピー</button>
+    <!-- プログレス -->
+    <div id="progressBar">
+        <div class="prog-step" id="prog-0">S</div>
+        <div class="prog-step" id="prog-1">O</div>
+        <div class="prog-step" id="prog-2">A</div>
+        <div class="prog-step" id="prog-3">EP</div>
+        <div class="prog-step" id="prog-4">OP</div>
+    </div>
 
-    <h2>A</h2>
-    <textarea id="aBlock" rows="5" cols="80"></textarea>
-    <br>
-    <button type="button" onclick="copyBlock('aBlock', this)">Aをコピー</button>
+    <!-- ステータスボックス -->
+    <div id="statusBox">
+        <div id="statusLabel">【S】をクリップボードにコピーしました　⌘+V で貼り付けてください</div>
+        <div id="countdown">1</div>
+        <div id="hint">秒後に自動で次のブロックへ切り替わります</div>
+    </div>
 
-    <h2>EP</h2>
-    <textarea id="epBlock" rows="5" cols="80"></textarea>
-    <br>
-    <button type="button" onclick="copyBlock('epBlock', this)">EPをコピー</button>
+    <!-- 自動コピーボタン -->
+    <button id="autoBtn" type="button" onclick="startAutoFlow()" disabled>
+        📋 1回押して順番にコピー開始（S→O→A→EP→OP）
+    </button>
 
-    <h2>OP</h2>
-    <textarea id="opBlock" rows="5" cols="80"></textarea>
-    <br>
-    <button type="button" onclick="copyBlock('opBlock', this)">OPをコピー</button>
+    <hr style="margin:14px 0;">
 
-        <script>
+    <!-- S -->
+    <div class="block-section" id="section-0">
+        <h2>S</h2>
+        <textarea id="sBlock" rows="4"></textarea>
+        <br>
+        <button type="button" onclick="copyBlock('sBlock', this)">Sをコピー</button>
+    </div>
+
+    <!-- O -->
+    <div class="block-section" id="section-1">
+        <h2>O</h2>
+        <textarea id="oBlock" rows="4"></textarea>
+        <br>
+        <button type="button" onclick="copyBlock('oBlock', this)">Oをコピー</button>
+    </div>
+
+    <!-- A -->
+    <div class="block-section" id="section-2">
+        <h2>A</h2>
+        <textarea id="aBlock" rows="4"></textarea>
+        <br>
+        <button type="button" onclick="copyBlock('aBlock', this)">Aをコピー</button>
+    </div>
+
+    <!-- EP -->
+    <div class="block-section" id="section-3">
+        <h2>EP</h2>
+        <textarea id="epBlock" rows="4"></textarea>
+        <br>
+        <button type="button" onclick="copyBlock('epBlock', this)">EPをコピー</button>
+    </div>
+
+    <!-- OP -->
+    <div class="block-section" id="section-4">
+        <h2>OP</h2>
+        <textarea id="opBlock" rows="4"></textarea>
+        <br>
+        <button type="button" onclick="copyBlock('opBlock', this)">OPをコピー</button>
+    </div>
+
+    <script>
+        const SEQ_BLOCKS = [
+            { id: "sBlock", label: "S" },
+            { id: "oBlock", label: "O" },
+            { id: "aBlock", label: "A" },
+            { id: "epBlock", label: "EP" },
+            { id: "opBlock", label: "OP" },
+        ];
+
+        const INTERVAL_SEC = 1; // 次のブロックへ切り替わる秒数
+
+        let autoTimer = null;
+        let countdownTimer = null;
+        let isRunning = false;
+
+        // ---- 分割 ----
         function splitText() {
             const text = document.getElementById("sourceText").value;
-
             const pattern = /【S】([\s\S]*?)【O】([\s\S]*?)【A】([\s\S]*?)【EP】([\s\S]*?)【OP】([\s\S]*)/;
             const match = text.match(pattern);
 
@@ -72,45 +311,179 @@
                 return;
             }
 
-            // 見出しを残して出力
-            document.getElementById("sBlock").value  = "【S】\n"  + match[1].trim();
-            document.getElementById("oBlock").value  = "【O】\n"  + match[2].trim();
-            document.getElementById("aBlock").value  = "【A】\n"  + match[3].trim();
+            document.getElementById("sBlock").value = "【S】\n" + match[1].trim();
+            document.getElementById("oBlock").value = "【O】\n" + match[2].trim();
+            document.getElementById("aBlock").value = "【A】\n" + match[3].trim();
             document.getElementById("epBlock").value = "【EP】\n" + match[4].trim();
             document.getElementById("opBlock").value = "【OP】\n" + match[5].trim();
+
+            resetAll();
+            document.getElementById("autoBtn").disabled = false;
         }
-    </script>
 
-    <script>
+        // ---- 個別コピー ----
         function copyBlock(id, btn) {
-            const area = document.getElementById(id);
-            const text = area.value;
+            const text = document.getElementById(id).value;
+            if (!text) { alert("コピーする内容がありません。"); return; }
 
-            if (!text) {
-                alert("コピーする内容がありません。");
+            navigator.clipboard.writeText(text).then(() => {
+                btn.style.backgroundColor = "#8bc34a";
+                btn.style.color = "white";
+                setTimeout(() => { btn.style.backgroundColor = ""; btn.style.color = ""; }, 1000);
+            }).catch(err => { alert("コピーに失敗しました。"); console.error(err); });
+        }
+
+        // ---- リセット ----
+        function resetAll() {
+            stopTimers();
+            isRunning = false;
+            SEQ_BLOCKS.forEach((_, i) => {
+                document.getElementById("prog-" + i).className = "prog-step";
+                document.getElementById("section-" + i).className = "block-section";
+            });
+            document.getElementById("statusBox").classList.remove("visible");
+            const btn = document.getElementById("autoBtn");
+            btn.classList.remove("running");
+            btn.textContent = "📋 1回押して順番にコピー開始（S→O→A→EP→OP）";
+        }
+
+        function stopTimers() {
+            if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
+            if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+        }
+
+        // ---- 自動コピーフロー（1回押すだけで全部）----
+        function startAutoFlow() {
+            if (isRunning) {
+                // 実行中にボタンを押したら中断
+                resetAll();
+                document.getElementById("autoBtn").disabled = false;
                 return;
             }
 
-            navigator.clipboard.writeText(text)
-                .then(() => {
-                    // ボタン色変更
-                    btn.style.backgroundColor = "#8bc34a";  // 緑
-                    btn.style.color = "white";
+            isRunning = true;
+            const btn = document.getElementById("autoBtn");
+            btn.classList.add("running");
+            btn.textContent = "⏹ 中断する";
 
-                    // 1秒後に戻す
-                    setTimeout(() => {
-                        btn.style.backgroundColor = "";
-                        btn.style.color = "";
-                    }, 1000);
-                })
-                .catch(err => {
-                    alert("コピーに失敗しました。");
-                    console.error(err);
-                });
+            runStep(0);
         }
 
+        function runStep(index) {
+            if (index >= SEQ_BLOCKS.length) {
+                // 全完了
+                allDone();
+                return;
+            }
+
+            const block = SEQ_BLOCKS[index];
+            const text = document.getElementById(block.id).value;
+
+            if (!text) {
+                alert("【" + block.label + "】の内容がありません。");
+                resetAll();
+                document.getElementById("autoBtn").disabled = false;
+                return;
+            }
+
+            // クリップボードへコピー
+            navigator.clipboard.writeText(text).then(() => {
+
+                // プログレス更新
+                SEQ_BLOCKS.forEach((_, i) => {
+                    if (i < index) document.getElementById("prog-" + i).className = "prog-step done";
+                    if (i === index) document.getElementById("prog-" + i).className = "prog-step active";
+                    if (i > index) document.getElementById("prog-" + i).className = "prog-step";
+                });
+
+                // ブロックハイライト
+                SEQ_BLOCKS.forEach((_, i) => {
+                    document.getElementById("section-" + i).className =
+                        i < index ? "block-section done-step" :
+                            i === index ? "block-section active-step" :
+                                "block-section";
+                });
+
+                // ステータス表示
+                const statusBox = document.getElementById("statusBox");
+                const statusLabel = document.getElementById("statusLabel");
+                const countdown = document.getElementById("countdown");
+                const hint = document.getElementById("hint");
+
+                statusBox.classList.add("visible");
+                statusLabel.classList.remove("done-all");
+                statusLabel.textContent = "【" + block.label + "】をクリップボードにコピーしました　⌘+V で貼り付けてください";
+
+                const isLast = (index === SEQ_BLOCKS.length - 1);
+
+                if (isLast) {
+                    countdown.textContent = "";
+                    hint.textContent = "（最後のブロックです）";
+                    // 最後は少し待ってから完了表示
+                    autoTimer = setTimeout(() => allDone(), 2000);
+                } else {
+                    // カウントダウン
+                    let remaining = INTERVAL_SEC;
+                    countdown.textContent = remaining;
+                    hint.textContent = "秒後に自動で【" + SEQ_BLOCKS[index + 1].label + "】へ切り替わります";
+
+                    stopTimers(); // 念のため既存タイマーをクリア
+                    countdownTimer = setInterval(() => {
+                        remaining--;
+                        countdown.textContent = remaining;
+                        if (remaining <= 0) {
+                            clearInterval(countdownTimer);
+                            countdownTimer = null;
+                        }
+                    }, 1000);
+
+                    autoTimer = setTimeout(() => {
+                        stopTimers();
+                        runStep(index + 1);
+                    }, INTERVAL_SEC * 1000);
+                }
+
+                // 対象ブロックへスクロール
+                document.getElementById("section-" + index).scrollIntoView({ behavior: "smooth", block: "center" });
+
+            }).catch(err => {
+                alert("コピーに失敗しました。");
+                console.error(err);
+                resetAll();
+                document.getElementById("autoBtn").disabled = false;
+            });
+        }
+
+        function allDone() {
+            stopTimers();
+            isRunning = false;
+
+            SEQ_BLOCKS.forEach((_, i) => {
+                document.getElementById("prog-" + i).className = "prog-step done";
+                document.getElementById("section-" + i).className = "block-section done-step";
+            });
+
+            const statusLabel = document.getElementById("statusLabel");
+            statusLabel.classList.add("done-all");
+            statusLabel.textContent = "🎉 全ブロックのコピーが完了しました！";
+            document.getElementById("countdown").textContent = "";
+            document.getElementById("hint").textContent = "";
+
+            const btn = document.getElementById("autoBtn");
+            btn.classList.remove("running");
+            btn.textContent = "🔄 もう一度";
+            btn.disabled = false;
+            btn.onclick = () => {
+                resetAll();
+                btn.onclick = startAutoFlow;
+                startAutoFlow();
+            };
+        }
     </script>
 
 </body>
-<footer><p>株式会社かなうま</p></footer>
+<footer>
+    <p style="text-align:center;color:#888;font-size:12px;margin-top:20px;">株式会社かなうま</p>
+</footer>
+
 </html>
